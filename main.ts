@@ -1,13 +1,20 @@
 import { parseRESP } from "./resp-parser.ts";
 
-const PORT = 6379;
+export const PORT = 6379;
 
 const dataStore: Record<string, string> = {};
+let listener: Deno.Listener;
 
-const listener = Deno.listen({ port: PORT });
+export async function startServer() {
+  listener = Deno.listen({ port: PORT });
 
-for await (const conn of listener) {
-  handleConnection(conn);
+  for await (const conn of listener) {
+    handleConnection(conn);
+  }
+}
+
+export function stopServer() {
+  listener.close();
 }
 
 async function handleConnection(conn: Deno.Conn) {
@@ -48,7 +55,9 @@ async function handleConnection(conn: Deno.Conn) {
           break;
         }
         const value = dataStore[arg1];
-        const response = value ? new TextEncoder().encode(`$${value.length}\r\n${value}\r\n`) : new TextEncoder().encode("$-1\r\n");
+        const response = value
+          ? new TextEncoder().encode(`$${value.length}\r\n${value}\r\n`)
+          : new TextEncoder().encode("$-1\r\n");
         await conn.write(response);
       }
       break;
@@ -57,4 +66,8 @@ async function handleConnection(conn: Deno.Conn) {
   }
 
   conn.close();
+}
+
+if (import.meta.main) {
+  await startServer();
 }

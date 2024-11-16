@@ -2,6 +2,7 @@ type RESPData = string | number | null | RESPData[];
 
 export function parseRESP(buffer: Uint8Array): RESPData {
   const lines = new TextDecoder().decode(buffer).split("\r\n");
+  console.log(lines);
 
   let i = 0;
 
@@ -30,7 +31,7 @@ export function parseRESP(buffer: Uint8Array): RESPData {
     if (length === -1) return null;
     const bulkString = lines[i++];
     if (bulkString.length !== length) throw new Error("Invalid input");
-    return bulkString.toLowerCase();
+    return bulkString;
   };
 
   const parseArray = (length: number): RESPData[] => {
