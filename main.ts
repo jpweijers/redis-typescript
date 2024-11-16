@@ -15,7 +15,13 @@ async function handleConnection(conn: Deno.Conn) {
   const parsedData = parseRESP(buffer.subarray(0, readBytes ?? 0));
   const [command, ...args] = parsedData as string[];
 
-  console.log(command, args);
+  switch (command.toUpperCase()) {
+    case "PING":
+      await conn.write(new TextEncoder().encode("+PONG\r\n"));
+      break;
+    default:
+      await conn.write(new TextEncoder().encode("-ERR unknown command\r\n"));
+  }
 
   conn.close();
 }
