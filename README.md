@@ -33,7 +33,19 @@ You can interact with the server using the redis-cli.
   kiwi
 
 > redis-cli GET veg
-  nil
+  (nil)
+```
+
+### SET with expiraton
+```shell
+> redis-cli SET fruit kiwi 100
+  OK
+> redis-cli GET fruit
+  kiwi
+
+# after some time
+> redis-cli GET fruit
+  (nil)
 ```
 
 
