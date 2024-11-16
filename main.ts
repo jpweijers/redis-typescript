@@ -2,7 +2,12 @@ import { parseRESP } from "./resp-parser.ts";
 
 export const PORT = 6379;
 
-const dataStore: Record<string, string> = {};
+interface DataStore {
+  [key: string]: { value: string; expireAt: number | undefined };
+}
+
+const dataStore: DataStore = {};
+
 let listener: Deno.Listener;
 
 export async function startServer() {
@@ -34,14 +39,15 @@ async function handleConnection(conn: Deno.Conn) {
       );
       break;
     case "SET": {
-      const [arg1, arg2] = args;
+      const [arg1, arg2, arg3] = args;
       if (!arg1 || !arg2) {
         await conn.write(
           new TextEncoder().encode("-ERR wrong number of arguments\r\n"),
         );
         break;
       }
-      dataStore[arg1] = arg2;
+      const expireAt = arg3 ? Date.now() + parseInt(arg3) : undefined;
+      dataStore[arg1] = { value: arg2, expireAt };
       await conn.write(new TextEncoder().encode("+OK\r\n"));
       break;
     }
@@ -54,11 +60,18 @@ async function handleConnection(conn: Deno.Conn) {
           );
           break;
         }
-        const value = dataStore[arg1];
-        const response = value
-          ? new TextEncoder().encode(`$${value.length}\r\n${value}\r\n`)
-          : new TextEncoder().encode("$-1\r\n");
-        await conn.write(response);
+        const { value, expireAt } = dataStore[arg1] ?? {};
+        if (!value) {
+          await conn.write(new TextEncoder().encode("$-1\r\n"));
+        } else if (expireAt && expireAt < Date.now()) {
+          delete dataStore[arg1];
+          await conn.write(new TextEncoder().encode("$-1\r\n"));
+        } else {
+          const response = new TextEncoder().encode(
+            `$${value.length}\r\n${value}\r\n`,
+          );
+          await conn.write(response);
+        }
       }
       break;
     default:

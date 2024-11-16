@@ -99,5 +99,25 @@ Deno.test("REDIS", async (t) => {
     conn.close();
   });
 
+  await t.step("GET with expired key", async () => {
+    let conn: Deno.Conn;
+    conn = await Deno.connect({ port: PORT });
+
+    conn.write(
+      new TextEncoder().encode(
+        "*4\r\n$3\r\nSET\r\n$3\r\nbaz\r\n$3\r\nqux\r\n:100\r\n",
+      ),
+    );
+    await new Promise((res) => setTimeout(res, 100));
+    conn.close();
+
+    conn = await Deno.connect({ port: PORT });
+    conn.write(new TextEncoder().encode("*2\r\n$3\r\nGET\r\n$3\r\nbaz\r\n"));
+    const response = await readResponse(conn);
+
+    assertEquals(response, "$-1\r\n");
+    conn.close();
+  });
+
   stopServer();
 });
