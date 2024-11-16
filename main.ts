@@ -19,6 +19,11 @@ async function handleConnection(conn: Deno.Conn) {
     case "PING":
       await conn.write(new TextEncoder().encode("+PONG\r\n"));
       break;
+    case "ECHO":
+      await conn.write(
+        new TextEncoder().encode(`$${args[0].length}\r\n${args[0]}\r\n`),
+      );
+      break;
     default:
       await conn.write(new TextEncoder().encode("-ERR unknown command\r\n"));
   }
