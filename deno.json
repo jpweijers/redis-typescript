@@ -1,6 +1,8 @@
 {
   "tasks": {
-    "dev": "deno run --watch main.ts"
+    "dev": "deno run --watch main.ts",
+    "tst": "deno test --allow-net",
+    "cov": "rm -rf coverage && deno test --allow-net --coverage=coverage && deno coverage --html"
   },
   "imports": {
     "@std/assert": "jsr:@std/assert@1"

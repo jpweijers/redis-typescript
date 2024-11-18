@@ -1,8 +1,7 @@
-type RESPData = string | number | null | RESPData[];
+import type { RESPData } from "./resp.type.ts";
 
 export function parseRESP(buffer: Uint8Array): RESPData {
   const lines = new TextDecoder().decode(buffer).split("\r\n");
-  console.log(lines);
 
   let i = 0;
 
